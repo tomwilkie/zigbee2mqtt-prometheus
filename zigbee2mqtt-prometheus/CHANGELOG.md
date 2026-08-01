@@ -6,6 +6,17 @@ Versions follow the upstream Zigbee2MQTT release this build is based on, suffixe
 commit of [tomwilkie/zigbee2mqtt@prometheus-extension](https://github.com/tomwilkie/zigbee2mqtt/tree/prometheus-extension):
 `X.Y.Z-<sha>`, plus a `-N` add-on revision when the packaging changes without the fork moving.
 
+## 2.13.0-1e1df702-2
+
+- The sidebar icon is now `mdi:zigbee` (was `mdi:chart-line`), matching the official add-on.
+  It can't be `logo.png`: `panel_icon` takes an MDI icon name, and the frontend component that
+  renders it resolves `prefix:name` against MDI or a registered custom iconset — it has no path to
+  rendering an image. `icon.png`/`logo.png` appear on the add-on store card and add-on page only.
+- Packaging only. The image is the one published for `2.13.0-1e1df702`, re-tagged rather than
+  rebuilt (`docker buildx imagetools create`), so the amd64 manifest digest is unchanged. The
+  version bump exists solely because the Supervisor pulls `<image>:<version>` and an installed
+  add-on keeps its metadata until it is updated.
+
 ## 2.13.0-1e1df702
 
 - No functional change: both fork branches were rewritten to sign their commits, so the

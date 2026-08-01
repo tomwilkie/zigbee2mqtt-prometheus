@@ -1,6 +1,6 @@
 {
   "name": "Zigbee2MQTT (Prometheus)",
-  "version": "2.13.0-1e1df702",
+  "version": "2.13.0-1e1df702-2",
   "slug": "zigbee2mqtt_prometheus",
   "description": "Zigbee2MQTT with the Prometheus exporter extension (unofficial fork build)",
   "uart": true,
@@ -18,7 +18,7 @@
   "init": false,
   "ingress": true,
   "timeout": 30,
-  "panel_icon": "mdi:chart-line",
+  "panel_icon": "mdi:zigbee",
   "map": [
     {
       "type": "share",
