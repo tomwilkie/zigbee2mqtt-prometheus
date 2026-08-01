@@ -122,23 +122,96 @@ join it in with `on (ieee_address) group_left(friendly_name)`.
 
 Default `prom-client` process/Node.js metrics are exported alongside these.
 
-# Running alongside the official app
+# Running alongside another Zigbee2MQTT
 
 This app defaults to `data_path: /config/zigbee2mqtt-prometheus`, separate from the official app's
 `/config/zigbee2mqtt`, so installing it cannot corrupt an existing setup. To trial it against your
 real network, stop the official app first and copy its data directory across — only one app may
-own the USB coordinator at a time:
+own the USB coordinator at a time, and only one may bind host port 9142:
 
 ```sh
-cp -r /config/zigbee2mqtt /config/zigbee2mqtt-prometheus
+cp -a /config/zigbee2mqtt /config/zigbee2mqtt-prometheus
 ```
 
-To roll back, stop this app and start the official one again:
+# Migrating an existing Zigbee2MQTT to this app
+
+Two properties make this safe, and both are worth knowing before you start:
+
+- **Installing from this repository is a side-by-side install, not an upgrade.** The Supervisor
+  keys apps by `<repository>_<slug>`, so this app arrives as `<hash>_zigbee2mqtt_prometheus`
+  and whatever you were running before stays installed, configured and startable. That is the
+  rollback.
+- **Zigbee2MQTT keeps no state in the app's own volume** — the database, `coordinator_backup.json`
+  and `configuration.yaml` all live under `data_path` in `/config`. So uninstalling the old app
+  never destroys your network, and two apps pointed at the same `data_path` hand state over
+  between them cleanly, as long as they never run at once.
+
+1. **Back up, twice.** A Supervisor backup for the general case, and a plain copy of the data
+   directory, which is what the rollback below actually uses. Take the copy with the app
+   **stopped** so the SQLite database is quiesced:
+
+   ```sh
+   ha backups new --name pre-prometheus-migration --folders homeassistant --app <oldapp>
+   ha apps stop <oldapp>
+   cp -a /config/zigbee2mqtt /config/zigbee2mqtt.bak-$(date +%F)
+   ```
+
+   `configuration.yaml` holds the network key — this copy is what stands between you and
+   re-pairing every device.
+
+2. **Stop the old app from coming back.** Turn off *Start on boot* and *Watchdog* on it, or a
+   reboot will have two apps racing for the coordinator. In the UI that's the toggles on its
+   Info tab.
+
+3. **Install this app** and set `data_path` to the directory you just backed up, plus whatever
+   `mqtt`/`serial` options the old app had — copy them from its Configuration tab. If the old app
+   left those empty and kept everything in `configuration.yaml`, leave them empty here too.
+
+4. **Start it and check the log.** Expect `Starting Zigbee2MQTT version <version>`, the adapter
+   matching, and `zigbee-herdsman started (resumed)` — *resumed*, not a fresh network form.
+
+5. **Turn on *Start on boot* and *Watchdog*** once you are happy, since you turned them off on the
+   old app in step 2.
+
+## Verifying the migration
+
+The exporter gives you a precise before/after. Capture `/metrics` from the old app before you
+stop it, and compare:
 
 ```sh
-ha addons stop local_zigbee2mqtt_prometheus
-ha addons start 45df7312_zigbee2mqtt
+curl -s http://<ha-host>:9142/metrics > before.txt   # while the old app still runs
+# ... migrate ...
+curl -s http://<ha-host>:9142/metrics > after.txt
+
+grep '^zigbee2mqtt_coordinator_info' before.txt after.txt   # must be the same network
+diff <(grep -o 'ieee_address="[^"]*"' before.txt | sort -u) \
+     <(grep -o 'ieee_address="[^"]*"' after.txt  | sort -u)  # must be empty
 ```
+
+`zigbee2mqtt_coordinator_info` carrying the same `extended_pan_id` and `channel` is the
+confirmation that you resumed the existing network rather than forming a new one, and an empty
+device diff means nothing was lost. `zigbee2mqtt_build_info` shows the version you moved to.
+
+## Rolling back
+
+In increasing order of severity:
+
+1. **To the previous app** — the expected path, and a matter of seconds:
+
+   ```sh
+   ha apps stop <newapp>
+   rm -rf /config/zigbee2mqtt && cp -a /config/zigbee2mqtt.bak-<date> /config/zigbee2mqtt
+   ha apps start <oldapp>
+   ```
+
+   Restoring the directory is what undoes any settings migration the newer Zigbee2MQTT performed.
+
+2. **To the official app**, giving up metrics but getting Zigbee back. Point it at the data
+   directory and start it. The `prometheus_exporter:` block left in `configuration.yaml` is
+   harmless there — Zigbee2MQTT's settings schema does not reject unknown keys, so an unforked
+   build starts on it unchanged.
+
+3. **Restore the Supervisor backup** from step 1, via Settings → System → Backups.
 
 # Enabling the watchdog
 

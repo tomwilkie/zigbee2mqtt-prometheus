@@ -29,6 +29,14 @@ Currently built from **Zigbee2MQTT 2.13.0** / **zigbee-herdsman v10.8.0**.
    real network, stop the official add-on and copy its data directory across — only one add-on may
    own the USB coordinator at a time.
 
+**Replacing an existing Zigbee2MQTT?** Installing from this repository is a side-by-side install
+rather than an upgrade — the Supervisor keys add-ons by `<repository>_<slug>`, so the add-on you
+were running stays installed and startable, which is what makes the rollback trivial. Zigbee2MQTT
+also keeps no state in the add-on's own volume, so pointing this add-on at the existing `data_path`
+hands the network over intact. [The add-on docs](zigbee2mqtt-prometheus/DOCS.md#migrating-an-existing-zigbee2mqtt-to-this-app)
+have the full procedure, including using `/metrics` itself to prove the same network and the same
+device set came back.
+
 The exporter is **on by default**, configured from the add-on options page:
 
 ```yaml
