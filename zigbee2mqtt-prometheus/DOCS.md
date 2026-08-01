@@ -61,12 +61,11 @@ The backup of your configuration is created on app startup if no previous backup
 
 # Prometheus metrics
 
-This build adds a Prometheus exporter that serves metrics over HTTP. It is **disabled by default**.
+This build adds a Prometheus exporter that serves metrics over HTTP. It is **enabled by default**.
 
-## Enabling
+## Configuring
 
-The exporter is configured in Zigbee2MQTT's own `configuration.yaml` (inside your `data_path`,
-e.g. `/config/zigbee2mqtt-prometheus/configuration.yaml`), not in the app configuration page:
+The exporter is an app configuration option, alongside `mqtt` and `serial`:
 
 ```yaml
 prometheus_exporter:
@@ -75,8 +74,18 @@ prometheus_exporter:
   # host: 0.0.0.0   # optional; omit to listen on all interfaces
 ```
 
-Restart the app. Metrics are then served at `http://<ha-host>:9142/metrics` — port `9142/tcp` is
-published by the app, so scrape it from anywhere on your network:
+The app writes these into Zigbee2MQTT's own `configuration.yaml` on start, so you can equally set
+them there directly (inside your `data_path`, e.g.
+`/config/zigbee2mqtt-prometheus/configuration.yaml`) — but the app configuration wins, since it is
+re-applied every start.
+
+> [!NOTE]
+> On a **brand new install** the app leaves `configuration.yaml` alone so that
+> [onboarding](#onboarding) can create it. The exporter setting is therefore applied from the
+> second start onwards — restart the app once after onboarding.
+
+Metrics are served at `http://<ha-host>:9142/metrics` — port `9142/tcp` is published by the app,
+so scrape it from anywhere on your network:
 
 ```yaml
 scrape_configs:

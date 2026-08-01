@@ -63,6 +63,7 @@ docker buildx build \
     --platform linux/amd64 \
     -f "$PWD/build/Dockerfile" \
     --build-arg "ADDON_IMAGE=$ADDON_IMAGE" \
+    --build-context "addon=$PWD/build" \
     -t "$REPO:$TAG" \
     "${PUSH[@]}" \
     "$SRC"

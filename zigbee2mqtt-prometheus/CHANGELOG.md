@@ -4,7 +4,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 Versions follow the upstream Zigbee2MQTT release this build is based on, suffixed with the short
 commit of [tomwilkie/zigbee2mqtt@prometheus-extension](https://github.com/tomwilkie/zigbee2mqtt/tree/prometheus-extension):
-`X.Y.Z-<sha>`.
+`X.Y.Z-<sha>`, plus a `-N` add-on revision when the packaging changes without the fork moving.
+
+## 2.13.0-dd6a6b19-2
+
+- The Prometheus exporter is now an add-on option and is **enabled by default**. Previously it
+  followed Zigbee2MQTT's default of disabled and could only be turned on by hand-editing
+  `configuration.yaml`, since the add-on entrypoint has no way to reach the setting.
+- On a brand new install the setting is applied from the second start onwards, so that onboarding
+  can create `configuration.yaml` first.
 
 ## 2.13.0-dd6a6b19
 

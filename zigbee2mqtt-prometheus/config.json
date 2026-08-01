@@ -1,6 +1,6 @@
 {
   "name": "Zigbee2MQTT (Prometheus)",
-  "version": "2.13.0-dd6a6b19",
+  "version": "2.13.0-dd6a6b19-2",
   "slug": "zigbee2mqtt_prometheus",
   "description": "Zigbee2MQTT with the Prometheus exporter extension (unofficial fork build)",
   "uart": true,
@@ -55,7 +55,11 @@
       "log": false
     },
     "mqtt": {},
-    "serial": {}
+    "serial": {},
+    "prometheus_exporter": {
+      "enabled": true,
+      "port": 9142
+    }
   },
   "schema": {
     "data_path": "str",
@@ -80,6 +84,11 @@
       "adapter": "match(zstack|deconz|zigate|ezsp|ember|zboss)?",
       "baudrate": "int?",
       "rtscts": "bool?"
+    },
+    "prometheus_exporter": {
+      "enabled": "bool?",
+      "port": "int?",
+      "host": "str?"
     },
     "watchdog": "str?",
     "force_onboarding": "bool?"

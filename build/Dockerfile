@@ -16,7 +16,8 @@
 # and so silently moved the wrapper and Node version under a stable overlay.)
 #
 # Build context is the zigbee2mqtt checkout (src/zigbee2mqtt), NOT this repo — see
-# scripts/build-push.sh. `pnpm run build` must have been run there first so dist/ exists.
+# scripts/build-push.sh. `pnpm run build` must have been run there first so dist/ exists. This
+# repo's build/ directory is passed in as the named context `addon`.
 #
 # If these images ever stop being a suitable base (e.g. Node major diverges from the fork's
 # requirements), the fallback is to adapt common/Dockerfile from
@@ -51,3 +52,11 @@ FROM ${ADDON_IMAGE} AS final
 COPY --from=deps /build/node_modules /app/node_modules
 COPY dist /app/dist
 COPY index.js package.json /app/
+
+# Wrap the official entrypoint so `prometheus_exporter` in the add-on options reaches
+# Zigbee2MQTT's configuration.yaml, then chain to it unchanged. These come from a named build
+# context (`--build-context addon=<this repo>/build`), since the main context is the z2m checkout.
+COPY --from=addon --chmod=755 rootfs/prometheus-entrypoint.sh /prometheus-entrypoint.sh
+COPY --from=addon rootfs/etc/prometheus-exporter-config.js /etc/prometheus-exporter-config.js
+
+ENTRYPOINT ["/sbin/tini", "--", "/prometheus-entrypoint.sh"]
