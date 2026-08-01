@@ -6,6 +6,15 @@ Versions follow the upstream Zigbee2MQTT release this build is based on, suffixe
 commit of [tomwilkie/zigbee2mqtt@prometheus-extension](https://github.com/tomwilkie/zigbee2mqtt/tree/prometheus-extension):
 `X.Y.Z-<sha>`, plus a `-N` add-on revision when the packaging changes without the fork moving.
 
+## 2.13.0-446c918e
+
+- `prometheus_exporter` is now in Zigbee2MQTT's settings schema (added to
+  [#31645](https://github.com/Koenkk/zigbee2mqtt/pull/31645)), so it can be set via
+  `ZIGBEE2MQTT_CONFIG_*` env vars and shows up in the Zigbee2MQTT frontend's settings page.
+- The add-on forwards its `prometheus_exporter` option through those env vars as well as into
+  `configuration.yaml`, so the setting now also applies on a brand new install's first start,
+  via the config that onboarding writes.
+
 ## 2.13.0-dd6a6b19-2
 
 - The Prometheus exporter is now an add-on option and is **enabled by default**. Previously it

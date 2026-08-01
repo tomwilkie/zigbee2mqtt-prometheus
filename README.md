@@ -34,9 +34,6 @@ prometheus_exporter:
   port: 9142
 ```
 
-On a brand new install the add-on leaves `configuration.yaml` for onboarding to create, so the
-exporter setting lands from the second start onwards — restart once after onboarding.
-
 Metrics are then at `http://<ha-host>:9142/metrics`. See
 [the add-on docs](zigbee2mqtt-prometheus/DOCS.md) for the full metric list and rollback steps.
 
@@ -54,21 +51,26 @@ src/                         fork checkouts (gitignored, created by scripts/reba
 ### Enabling the exporter from the add-on options
 
 Zigbee2MQTT defaults `prometheus_exporter.enabled` to `false`, and the official add-on entrypoint
-can't reach the setting: it forwards only the `mqtt` and `serial` option sections into
-`ZIGBEE2MQTT_CONFIG_*` env vars, and that env var mechanism derives its names from
-`lib/util/settings.schema.json`, which has no `prometheus_exporter` entry (the schema addition
-belongs upstream in [#31645](https://github.com/Koenkk/zigbee2mqtt/pull/31645)). Without this, an
-add-on named "(Prometheus)" would map port 9142 and export nothing until you hand-edited YAML.
+forwards only the `mqtt` and `serial` option sections into `ZIGBEE2MQTT_CONFIG_*` env vars. Without
+help, an add-on named "(Prometheus)" would map port 9142 and export nothing until you hand-edited
+YAML.
 
-So `build/rootfs/prometheus-entrypoint.sh` wraps the official entrypoint: it reads
-`prometheus_exporter` from `/data/options.json` and merges it into the data directory's
-`configuration.yaml` (via `prometheus-exporter-config.js`, using the image's own js-yaml), then
-`exec`s `/docker-entrypoint.sh` unchanged. It reads the options file directly rather than calling
-`bashio::config`, which queries the Supervisor API — an API hiccup there is indistinguishable from
-"the user turned the exporter off". It deliberately does nothing when `configuration.yaml` doesn't
-exist, since Zigbee2MQTT decides whether to run onboarding by testing for that file.
+`build/rootfs/prometheus-entrypoint.sh` wraps the official entrypoint, reads `prometheus_exporter`
+from `/data/options.json`, and forwards it **two ways** before `exec`ing `/docker-entrypoint.sh`
+unchanged — neither alone covers both cases:
 
-This is packaging-only; the fork branch and PR are untouched.
+- **`ZIGBEE2MQTT_CONFIG_PROMETHEUS_EXPORTER_*` env vars.** Zigbee2MQTT applies these when it
+  *writes* settings, which includes the initial config onboarding creates — so this covers a brand
+  new install. It does **not** apply them on read, so a plain restart of an existing install would
+  ignore them. (These names are derived from `lib/util/settings.schema.json`; the exporter's entry
+  there is part of [#31645](https://github.com/Koenkk/zigbee2mqtt/pull/31645), which also makes the
+  option appear in the Zigbee2MQTT frontend's settings page.)
+- **Merging into `configuration.yaml`** via `prometheus-exporter-config.js`, using the image's own
+  js-yaml. This covers existing installs. It deliberately does nothing when the file doesn't exist,
+  since Zigbee2MQTT decides whether to run onboarding by testing for it.
+
+The options file is read directly rather than via `bashio::config`, which queries the Supervisor
+API — an API hiccup there is indistinguishable from "the user turned the exporter off".
 
 ## Runbook: moving to a new Zigbee2MQTT release
 

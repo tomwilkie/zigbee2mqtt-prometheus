@@ -76,13 +76,8 @@ prometheus_exporter:
 
 The app writes these into Zigbee2MQTT's own `configuration.yaml` on start, so you can equally set
 them there directly (inside your `data_path`, e.g.
-`/config/zigbee2mqtt-prometheus/configuration.yaml`) — but the app configuration wins, since it is
-re-applied every start.
-
-> [!NOTE]
-> On a **brand new install** the app leaves `configuration.yaml` alone so that
-> [onboarding](#onboarding) can create it. The exporter setting is therefore applied from the
-> second start onwards — restart the app once after onboarding.
+`/config/zigbee2mqtt-prometheus/configuration.yaml`), or from the Zigbee2MQTT frontend's settings
+page — but the app configuration wins, since it is re-applied every start.
 
 Metrics are served at `http://<ha-host>:9142/metrics` — port `9142/tcp` is published by the app,
 so scrape it from anywhere on your network:

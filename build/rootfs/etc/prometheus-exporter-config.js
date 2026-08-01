@@ -1,16 +1,15 @@
-// Merge the add-on's prometheus_exporter options into Zigbee2MQTT's configuration.yaml.
+// Merge the add-on's prometheus_exporter options into Zigbee2MQTT's configuration.yaml, using the
+// js-yaml that ships in the image.
 //
-// Zigbee2MQTT defaults the exporter to disabled, and neither the add-on's entrypoint nor its
-// ZIGBEE2MQTT_CONFIG_* env var mechanism can reach the setting: env var names are derived from
-// lib/util/settings.schema.json, which has no prometheus_exporter entry (see
-// Koenkk/zigbee2mqtt#31645 — the schema addition belongs upstream). So we edit the config file
-// directly, using the js-yaml that ships in the image.
+// Zigbee2MQTT applies ZIGBEE2MQTT_CONFIG_* env vars only when it writes settings, and a plain
+// restart of an existing install never does — hence editing the file directly. See
+// prometheus-entrypoint.sh for how the two mechanisms complement each other.
 //
 // Usage: node prometheus-exporter-config.js <configuration.yaml> <json-options>
 //
 // Deliberately a no-op if the file doesn't exist yet: Zigbee2MQTT decides whether to run
 // onboarding by testing for configuration.yaml, so creating it here would skip onboarding on a
-// fresh install. The exporter is applied on the next start instead.
+// fresh install. The env vars cover that case instead, via onboarding's own initial write.
 
 const fs = require("node:fs");
 const yaml = require("/app/node_modules/js-yaml");

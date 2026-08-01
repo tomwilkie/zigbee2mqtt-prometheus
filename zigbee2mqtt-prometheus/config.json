@@ -1,6 +1,6 @@
 {
   "name": "Zigbee2MQTT (Prometheus)",
-  "version": "2.13.0-dd6a6b19-2",
+  "version": "2.13.0-446c918e",
   "slug": "zigbee2mqtt_prometheus",
   "description": "Zigbee2MQTT with the Prometheus exporter extension (unofficial fork build)",
   "uart": true,
