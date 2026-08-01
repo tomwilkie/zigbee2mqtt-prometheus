@@ -119,16 +119,21 @@ Prometheus (`localhost:9090`) and Grafana (`localhost:3000`) in the same stack s
 
 ### Notes on the image build
 
-`build/Dockerfile` derives from the official `ghcr.io/zigbee2mqtt/zigbee2mqtt-edge-amd64:edge`
-add-on image — reusing its HA wrapper, OS and Node — and overlays a locally built `dist/` plus the
-fork's exact production dependency closure. If that base ever stops being suitable, the fallback is
-to adapt `common/Dockerfile` from
+`build/Dockerfile` derives from the official **stable** add-on image for the same Zigbee2MQTT
+release the fork is rebased onto — `ghcr.io/zigbee2mqtt/zigbee2mqtt-amd64:<version>-<rev>`, e.g.
+`2.13.0-1` — reusing its HA wrapper, OS and Node, and overlays a locally built `dist/` plus the
+fork's exact production dependency closure. `scripts/build-push.sh` resolves the current add-on
+revision for that version from the registry and passes it in as `ADDON_IMAGE`; override the env var
+to pin a different base. (Don't use the `:edge` tag: it tracks upstream `dev`, so the wrapper and
+Node version would drift under a stable overlay.)
+
+If that base ever stops being suitable, the fallback is to adapt `common/Dockerfile` from
 [zigbee2mqtt/hassio-zigbee2mqtt](https://github.com/zigbee2mqtt/hassio-zigbee2mqtt), which builds
 from source onto `ghcr.io/home-assistant/{arch}-base` and would mean vendoring its `rootfs` here.
 
 When upstream changes the add-on itself (new config options, docs), re-sync
 `zigbee2mqtt-prometheus/config.json` and `DOCS.md` against
-[`zigbee2mqtt-edge/config.json`](https://github.com/zigbee2mqtt/hassio-zigbee2mqtt/blob/master/zigbee2mqtt-edge/config.json)
+[`zigbee2mqtt/config.json`](https://github.com/zigbee2mqtt/hassio-zigbee2mqtt/blob/master/zigbee2mqtt/config.json)
 and [`zigbee2mqtt/DOCS.md`](https://github.com/zigbee2mqtt/hassio-zigbee2mqtt/blob/master/zigbee2mqtt/DOCS.md).
 
 ## Credits

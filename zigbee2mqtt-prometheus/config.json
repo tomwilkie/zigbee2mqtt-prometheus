@@ -58,7 +58,6 @@
     "serial": {}
   },
   "schema": {
-    "disable_tuya_default_response": "bool?",
     "data_path": "str",
     "socat": {
       "enabled": "bool?",
@@ -73,7 +72,8 @@
       "key": "str?",
       "cert": "str?",
       "user": "str?",
-      "password": "str?"
+      "password": "str?",
+      "base_topic": "str?"
     },
     "serial": {
       "port": "str?",
