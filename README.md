@@ -141,3 +141,8 @@ and [`zigbee2mqtt/DOCS.md`](https://github.com/zigbee2mqtt/hassio-zigbee2mqtt/bl
 The add-on scaffolding, documentation and artwork are derived from the official
 [zigbee2mqtt/hassio-zigbee2mqtt](https://github.com/zigbee2mqtt/hassio-zigbee2mqtt) repository,
 Apache-2.0 licensed — see [LICENSE](LICENSE).
+
+`zigbee2mqtt-prometheus/logo.png` is that logo with the Prometheus icon from
+[cncf/artwork](https://github.com/cncf/artwork/tree/main/projects/prometheus) badged onto it, to
+distinguish this add-on from the official one in the Home Assistant UI. Prometheus and its logo are
+trademarks of The Linux Foundation.
