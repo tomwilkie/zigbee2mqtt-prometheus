@@ -6,6 +6,13 @@ Versions follow the upstream Zigbee2MQTT release this build is based on, suffixe
 commit of [tomwilkie/zigbee2mqtt@prometheus-extension](https://github.com/tomwilkie/zigbee2mqtt/tree/prometheus-extension):
 `X.Y.Z-<sha>`, plus a `-N` add-on revision when the packaging changes without the fork moving.
 
+## 2.13.0-1e1df702
+
+- No functional change: both fork branches were rewritten to sign their commits, so the
+  zigbee-herdsman pin moved to the re-signed commit
+  ([244a2b29](https://github.com/tomwilkie/zigbee-herdsman/commit/244a2b294075ee2c0dbe724ec8fe1dbbcc1361ee))
+  and the image was rebuilt against it.
+
 ## 2.13.0-446c918e
 
 - `prometheus_exporter` is now in Zigbee2MQTT's settings schema (added to

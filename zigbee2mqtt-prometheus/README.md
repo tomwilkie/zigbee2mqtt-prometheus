@@ -26,5 +26,5 @@ an existing installation. Only one app may own the USB coordinator at a time.
 ### Updating
 
 The app version tracks the upstream Zigbee2MQTT release it is built from, suffixed with the fork
-commit: e.g. `2.13.0-dd6a6b19`. Updates appear in the HA UI when a new image is published; use
+commit: e.g. `2.13.0-1e1df702`. Updates appear in the HA UI when a new image is published; use
 **⋮ → Check for updates** in the app store to refresh sooner.

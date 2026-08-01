@@ -7,7 +7,7 @@
 #
 # To instead run the published add-on image, use the `image` profile:
 #
-#   Z2M_TAG=2.13.0-dd6a6b19 docker compose -f build/docker-compose.yml --profile image up
+#   Z2M_TAG=2.13.0-1e1df702 docker compose -f build/docker-compose.yml --profile image up
 #
 # That runs the image's Zigbee2MQTT directly via node, bypassing the Home Assistant s6/bashio
 # entrypoint (which needs a Supervisor to talk to).
