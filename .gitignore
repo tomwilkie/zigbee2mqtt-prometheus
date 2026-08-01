@@ -1,0 +1,12 @@
+# Fork checkouts, created by scripts/rebase.sh
+/src/
+
+# Local dev stack state — Zigbee2MQTT rewrites its data dir at runtime
+/build/data/grafana/data/
+/build/data/prometheus/data/
+/build/data/zigbee2mqtt/log/
+/build/data/zigbee2mqtt/migration-*.log
+/build/data/zigbee2mqtt/configuration_backup_v*.yaml
+/build/data/zigbee2mqtt/*.db
+/build/data/zigbee2mqtt/coordinator_backup.json
+/build/data/zigbee2mqtt/state.json

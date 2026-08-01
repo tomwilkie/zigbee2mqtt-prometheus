@@ -1,0 +1,64 @@
+# Local dev/smoke-test stack: MQTT broker, Prometheus and Grafana.
+#
+#   docker compose -f build/docker-compose.yml up -d
+#
+# By default this only runs the supporting services, and Prometheus scrapes a Zigbee2MQTT you run
+# yourself on the host (host.docker.internal:9142) — e.g. `pnpm start` in src/zigbee2mqtt.
+#
+# To instead run the published add-on image, use the `image` profile:
+#
+#   Z2M_TAG=2.13.0-dd6a6b19 docker compose -f build/docker-compose.yml --profile image up
+#
+# That runs the image's Zigbee2MQTT directly via node, bypassing the Home Assistant s6/bashio
+# entrypoint (which needs a Supervisor to talk to).
+#
+# NOTE: this needs a real coordinator. Zigbee2MQTT *exits* if it can't open the serial port, and
+# extensions (including the exporter) only start after zigbee-herdsman does — so without hardware
+# you get "cannot open /dev/ttyUSB0" and no /metrics. Pass the device through below to use it:
+#
+#   devices: ["/dev/serial/by-id/usb-...:/dev/ttyUSB0"]
+#
+# For a hardware-free check of an image, see scripts/build-push.sh's notes and the README.
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./data/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./data/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data/grafana/provisioning:/etc/grafana/provisioning:ro
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+
+  zigbee2mqtt:
+    profiles: ["image"]
+    image: tomwilkie/zigbee2mqtt-prometheus-amd64:${Z2M_TAG:-latest}
+    platform: linux/amd64
+    entrypoint: ["node", "/app/index.js"]
+    working_dir: /app
+    environment:
+      - ZIGBEE2MQTT_DATA=/app/data
+    ports:
+      - "9142:9142"
+      - "8080:8080"
+    volumes:
+      - ./data/zigbee2mqtt:/app/data
+    depends_on:
+      - mosquitto

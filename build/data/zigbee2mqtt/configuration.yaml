@@ -1,0 +1,16 @@
+# Config for the local dev stack (docker compose --profile image).
+# Point `serial` at a real coordinator passed through in docker-compose.yml — Zigbee2MQTT exits if
+# it cannot open the port, and the exporter only starts after zigbee-herdsman does.
+# Note Zigbee2MQTT rewrites this file on startup (adding `version:`, dropping comments).
+version: 5
+mqtt:
+  server: mqtt://mosquitto:1883
+serial:
+  adapter: zstack
+  port: /dev/ttyUSB0
+frontend:
+  enabled: true
+  port: 8080
+prometheus_exporter:
+  enabled: true
+  port: 9142

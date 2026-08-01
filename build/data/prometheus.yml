@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: zigbee2mqtt
+    static_configs:
+      # Zigbee2MQTT run on the host (pnpm start in src/zigbee2mqtt)
+      - targets: ["host.docker.internal:9142"]
+        labels: {source: host}
+      # Zigbee2MQTT run from the add-on image (docker compose --profile image)
+      - targets: ["zigbee2mqtt:9142"]
+        labels: {source: image}

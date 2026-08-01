@@ -1,0 +1,5 @@
+{
+  "name": "Zigbee2MQTT (Prometheus)",
+  "url": "https://github.com/tomwilkie/zigbee2mqtt-prometheus",
+  "maintainer": "Tom Wilkie <tom.wilkie@gmail.com>"
+}
