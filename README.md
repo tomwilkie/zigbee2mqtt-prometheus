@@ -1,4 +1,7 @@
-# Zigbee2MQTT with Prometheus metrics
+<div align="center">
+    <img width="150" height="150" src="zigbee2mqtt-prometheus/logo.png" alt="Zigbee2MQTT with Prometheus metrics">
+    <h1>Zigbee2MQTT with Prometheus metrics</h1>
+</div>
 
 A Home Assistant add-on repository publishing a build of [Zigbee2MQTT](https://www.zigbee2mqtt.io/)
 that exports Prometheus metrics about your Zigbee network.
