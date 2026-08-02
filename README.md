@@ -48,6 +48,18 @@ prometheus_exporter:
 Metrics are then at `http://<ha-host>:9142/metrics`. See
 [the add-on docs](zigbee2mqtt-prometheus/DOCS.md) for the full metric list and rollback steps.
 
+## Dashboards
+
+Grafana dashboards for these metrics — a fleet overview, a per-device drilldown and a coordinator
+view — live in
+[tomwilkie/home](https://github.com/tomwilkie/home/tree/main/observability/dashboards):
+[`zigbee2mqtt-overview.json`](https://github.com/tomwilkie/home/blob/main/observability/dashboards/zigbee2mqtt-overview.json),
+[`zigbee2mqtt-device.json`](https://github.com/tomwilkie/home/blob/main/observability/dashboards/zigbee2mqtt-device.json)
+and
+[`zigbee2mqtt-coordinator.json`](https://github.com/tomwilkie/home/blob/main/observability/dashboards/zigbee2mqtt-coordinator.json).
+
+![zigbee2mqtt overview dashboard](docs/grafana-zigbee2mqtt-overview.png)
+
 ## Repository layout
 
 ```
@@ -55,6 +67,7 @@ repository.json              Home Assistant add-on repository manifest
 zigbee2mqtt-prometheus/      the add-on: config.json, DOCS.md, CHANGELOG.md, icons
 build/                       Dockerfile for the image + a local dev stack (compose)
 build/rootfs/                entrypoint wrapper overlaid into the image
+docs/                        README screenshots
 scripts/                     rebase.sh, build-push.sh
 src/                         fork checkouts (gitignored, created by scripts/rebase.sh)
 ```
