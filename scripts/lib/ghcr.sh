@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # Registry lookups against ghcr.io, shared by build-push.sh and check-updates.sh so there is one
 # implementation of "which add-on image revision is current".
 #
