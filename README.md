@@ -67,9 +67,11 @@ repository.json              Home Assistant add-on repository manifest
 zigbee2mqtt-prometheus/      the add-on: config.json, DOCS.md, CHANGELOG.md, icons
 build/                       Dockerfile for the image + a local dev stack (compose)
 build/rootfs/                entrypoint wrapper overlaid into the image
+build/versions.json          the upstream versions the published image is built from
 docs/                        README screenshots
-scripts/                     rebase.sh, build-push.sh
+scripts/                     check-updates.sh, rebase.sh, build-push.sh
 src/                         fork checkouts (gitignored, created by scripts/rebase.sh)
+.github/workflows/           daily upstream-update check
 ```
 
 ### Enabling the exporter from the add-on options
@@ -98,8 +100,20 @@ API — an API hiccup there is indistinguishable from "the user turned the expor
 
 ## Runbook: moving to a new Zigbee2MQTT release
 
-1. **Check what's out.** The zigbee-herdsman version to target is whichever one the Zigbee2MQTT
-   release pins, so read it out of that release rather than taking herdsman's latest:
+1. **Check what's out.**
+
+   ```sh
+   scripts/check-updates.sh           # exits 1, and prints the commands below, if there's work
+   ```
+
+   Normally this step is already done for you: [the daily
+   workflow](.github/workflows/check-updates.yml) runs the same script and keeps one open issue
+   labelled `upstream-update` describing what moved, closing it once a release lands. See
+   [Automation](#automation-the-daily-check) for what it watches and why.
+
+   The zigbee-herdsman version to target is whichever one the Zigbee2MQTT release pins, **not**
+   herdsman's latest release — the script applies that rule, and reports herdsman's own latest as
+   information only. By hand it is:
 
    ```sh
    gh release list --repo Koenkk/zigbee2mqtt --limit 3
@@ -127,7 +141,9 @@ API — an API hiccup there is indistinguishable from "the user turned the expor
 
 4. **Publish the add-on update**: bump `version` in
    [`zigbee2mqtt-prometheus/config.json`](zigbee2mqtt-prometheus/config.json) to the new tag, add a
-   `CHANGELOG.md` entry, commit and push. Home Assistant picks the update up (**⋮ → Check for
+   `CHANGELOG.md` entry, commit and push — including
+   [`build/versions.json`](build/versions.json), which `build-push.sh` rewrote in step 3 and which
+   is what stops the daily check from re-reporting the release you just shipped. Home Assistant picks the update up (**⋮ → Check for
    updates** to refresh sooner).
 
 5. **Confirm the PRs are still clean** — the rebase should restore mergeability:
@@ -136,6 +152,37 @@ API — an API hiccup there is indistinguishable from "the user turned the expor
    gh pr view 31645 --repo Koenkk/zigbee2mqtt --json mergeable
    gh pr view 1751 --repo Koenkk/zigbee-herdsman --json mergeable
    ```
+
+### Automation: the daily check
+
+[`.github/workflows/check-updates.yml`](.github/workflows/check-updates.yml) runs
+[`scripts/check-updates.sh`](scripts/check-updates.sh) every morning and keeps a single open issue
+labelled `upstream-update` in sync with what it finds — created when something moves, edited when
+the situation changes, closed (with a comment) once the release lands on `main`. An unchanged
+situation is left alone, so it doesn't re-notify daily.
+
+It is **detection only**: no rebasing, no building, no publishing, and no secrets beyond the
+automatic `GITHUB_TOKEN`. The mutating steps stay in the runbook above, deliberately — the fork
+branches carry signed commits behind two open upstream PRs, and their rebases do conflict in
+practice, which is not something an unattended job should be resolving.
+
+The script compares [`build/versions.json`](build/versions.json) — the upstream versions the
+published image is built from, rewritten by `build-push.sh` on each push — against five things:
+
+| Signal | Means |
+| --- | --- |
+| A newer Zigbee2MQTT stable release | rebase + rebuild |
+| A different zigbee-herdsman pin *in that release* | rebase + rebuild |
+| A newer official base-image revision (`<version>-<rev>`) for our version | rebuild: the add-on wrapper, OS or Node moved under our overlay without a Zigbee2MQTT release |
+| Commits to `zigbee2mqtt/config.json` or `DOCS.md` in `hassio-zigbee2mqtt` | re-sync our copies (see below), then update `upstream_addon` in `versions.json` |
+| Either upstream PR no longer `OPEN` | if they merged, this repo can be retired |
+
+Run it yourself any time — `scripts/check-updates.sh`, or `--markdown` for the issue body it would
+post. It exits 1 when there is something to do.
+
+GitHub disables scheduled workflows in repositories with no commit activity for 60 days. Given this
+repo's cadence that can happen during a quiet stretch; a push to `main` or **Actions → Check for
+upstream updates → Run workflow** restarts it, and the Actions tab shows when it has been disabled.
 
 ### Checking an image before deploying to Home Assistant
 

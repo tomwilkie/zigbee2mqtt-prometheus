@@ -1,0 +1,82 @@
+# Daily: is there anything upstream worth rebuilding for? If so, keep one open issue describing it;
+# if not, close it again. Detection only — nothing here rebases, builds or publishes anything, so
+# it needs no secrets beyond the automatic GITHUB_TOKEN.
+#
+# The report itself is scripts/check-updates.sh, which is equally runnable by hand.
+
+name: Check for upstream updates
+
+on:
+  schedule:
+    # 07:00 UTC daily. Note GitHub disables scheduled workflows in repos with no commit activity
+    # for 60 days; the push trigger and manual dispatch below are the fallbacks.
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: check-updates
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      LABEL: upstream-update
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check upstream
+        id: check
+        run: scripts/check-updates.sh --github || true
+
+      - name: Reconcile the tracking issue
+        env:
+          HAS_UPDATES: ${{ steps.check.outputs.has_updates }}
+          TITLE: ${{ steps.check.outputs.title }}
+          BODY: ${{ steps.check.outputs.body }}
+        run: |
+          set -euo pipefail
+
+          gh label create "$LABEL" --color FBCA04 \
+              --description "Upstream Zigbee2MQTT/herdsman moved; a rebuild may be due" 2>/dev/null || true
+
+          existing=$(gh issue list --label "$LABEL" --state open --limit 1 --json number,body)
+          number=$(node -p "(JSON.parse(process.argv[1])[0] || {}).number ?? ''" "$existing")
+
+          if [[ ${HAS_UPDATES:-0} != 1 ]]; then
+              if [[ -n $number ]]; then
+                  gh issue comment "$number" --body "Upstream is back in sync with what we build — closing. (\`scripts/check-updates.sh\` reports nothing to do.)"
+                  gh issue close "$number"
+                  echo "Closed #$number: nothing to do."
+              else
+                  echo "Nothing to do, no open issue."
+              fi
+              exit 0
+          fi
+
+          printf '%s\n' "$BODY" >/tmp/body.md
+
+          if [[ -z $number ]]; then
+              url=$(gh issue create --title "$TITLE" --label "$LABEL" --body-file /tmp/body.md)
+              echo "Opened $url"
+              exit 0
+          fi
+
+          # Same situation as yesterday? Leave the issue alone rather than re-notifying daily.
+          if node -e '
+              const [existing, body] = process.argv.slice(1);
+              const old = (JSON.parse(existing)[0].body || "").replace(/\r/g, "").trim();
+              process.exit(old === body.replace(/\r/g, "").trim() ? 0 : 1);
+          ' "$existing" "$BODY"; then
+              echo "#$number is already up to date."
+          else
+              gh issue edit "$number" --title "$TITLE" --body-file /tmp/body.md
+              echo "Updated #$number"
+          fi

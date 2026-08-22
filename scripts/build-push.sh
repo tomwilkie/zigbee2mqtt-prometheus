@@ -17,6 +17,8 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+. scripts/lib/ghcr.sh
+
 REPO=docker.io/tomwilkie/zigbee2mqtt-prometheus-amd64
 SRC=src/zigbee2mqtt
 
@@ -35,18 +37,7 @@ TAG=${1:-$Z2M_VERSION-$(git -C $SRC rev-parse --short HEAD)}
 if [[ -z ${ADDON_IMAGE:-} ]]; then
     BASE_REPO=zigbee2mqtt/zigbee2mqtt-amd64
     log "Resolving base image tag for Zigbee2MQTT $Z2M_VERSION"
-    token=$(curl -sf "https://ghcr.io/token?scope=repository:$BASE_REPO:pull&service=ghcr.io" |
-        node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).token")
-    rev=$(curl -sf -H "Authorization: Bearer $token" "https://ghcr.io/v2/$BASE_REPO/tags/list" |
-        node -e '
-            const {tags} = JSON.parse(require("fs").readFileSync(0, "utf8"));
-            const v = process.argv[1];
-            const revs = tags
-                .filter((t) => t.startsWith(v + "-"))
-                .map((t) => Number(t.slice(v.length + 1)))
-                .filter((n) => Number.isInteger(n));
-            if (revs.length) console.log(Math.max(...revs));
-        ' "$Z2M_VERSION")
+    rev=$(ghcr_latest_revision "$BASE_REPO" "$Z2M_VERSION")
     [[ -n $rev ]] || die "No ghcr.io/$BASE_REPO tag for Zigbee2MQTT $Z2M_VERSION. The add-on image for this release may not be published yet; pass ADDON_IMAGE=... to override."
     ADDON_IMAGE=ghcr.io/$BASE_REPO:$Z2M_VERSION-$rev
 fi
@@ -68,6 +59,35 @@ docker buildx build \
     "${PUSH[@]}" \
     "$SRC"
 
+# Record what was published in build/versions.json, the state scripts/check-updates.sh compares
+# upstream against. Only on a real push: an unpushed local build hasn't changed what's out there.
+# upstream_addon is left alone — it tracks the hand-done re-sync against hassio-zigbee2mqtt.
+if [[ -z ${NO_PUSH:-} ]]; then
+    Z2M_TAG=$(git -C $SRC describe --tags --abbrev=0 HEAD 2>/dev/null || echo "$Z2M_VERSION")
+    Z2M_SHA=$(git -C $SRC rev-parse HEAD)
+    if [[ -d src/zigbee-herdsman ]]; then
+        ZH_TAG=$(git -C src/zigbee-herdsman describe --tags --abbrev=0 HEAD 2>/dev/null || echo "")
+        ZH_SHA=$(git -C src/zigbee-herdsman rev-parse HEAD)
+    else
+        ZH_TAG="" ZH_SHA=""
+    fi
+
+    node -e '
+        const fs = require("fs");
+        const file = "build/versions.json";
+        const v = JSON.parse(fs.readFileSync(file, "utf8"));
+        const [z2mTag, z2mSha, zhTag, zhSha, baseImage] = process.argv.slice(1);
+        v.zigbee2mqtt = {tag: z2mTag, fork_sha: z2mSha};
+        // Keep the recorded herdsman pin if src/zigbee-herdsman is not checked out here.
+        if (zhTag && zhSha) v.zigbee_herdsman = {tag: zhTag, fork_sha: zhSha};
+        v.base_image = baseImage;
+        fs.writeFileSync(file, JSON.stringify(v, null, 4) + "\n");
+    ' "$Z2M_TAG" "$Z2M_SHA" "$ZH_TAG" "$ZH_SHA" "$ADDON_IMAGE"
+
+    log "Recorded the new pinned state in build/versions.json"
+    git diff --stat -- build/versions.json || true
+fi
+
 cat <<EOF
 
 Pushed (or built) $REPO:$TAG
@@ -75,5 +95,6 @@ Pushed (or built) $REPO:$TAG
 Next:
   - bump "version" in zigbee2mqtt-prometheus/config.json to $TAG
   - add a zigbee2mqtt-prometheus/CHANGELOG.md entry
-  - commit + push this repo; Home Assistant will then offer the update
+  - commit + push this repo (including build/versions.json, updated above); Home Assistant
+    will then offer the update
 EOF
