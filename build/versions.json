@@ -1,0 +1,16 @@
+{
+    "_comment": "The upstream versions the published add-on is built from: what scripts/check-updates.sh compares against. Written by scripts/build-push.sh on a successful push; upstream_addon is maintained by hand when the re-sync in README's 'Notes on the image build' is done. The add-on's own version lives in zigbee2mqtt-prometheus/config.json.",
+    "zigbee2mqtt": {
+        "tag": "2.13.0",
+        "fork_sha": "1e1df702ee5dc73c3c145fd2487fa9528ed32fc1"
+    },
+    "zigbee_herdsman": {
+        "tag": "v10.8.0",
+        "fork_sha": "244a2b294075ee2c0dbe724ec8fe1dbbcc1361ee"
+    },
+    "base_image": "ghcr.io/zigbee2mqtt/zigbee2mqtt-amd64:2.13.0-1",
+    "upstream_addon": {
+        "zigbee2mqtt/config.json": "32d883bbf0cbb93c3cdf6af31fa97eabd14a2b85",
+        "zigbee2mqtt/DOCS.md": "4334ba01660b7cf92cc45c452e0ac85f2dd212c6"
+    }
+}
