@@ -33,6 +33,15 @@ WORKDIR /build
 
 COPY package.json pnpm-lock.yaml ./
 
+# The base image's Node is built with `enable_lto`, which node-gyp propagates into every native
+# addon build, so linking runs through GCC's lto-wrapper. That wrapper drives the parallel link
+# with a generated makefile listing object paths — and since zigbee-herdsman v10.9.x patches
+# @serialport/bindings-cpp (Koenkk/zigbee-herdsman#1856), pnpm stores it in a directory whose name
+# contains `patch_hash=<sha>`. make reads the `=` in that path as a variable assignment and dies
+# with "recipe commences before first target". Turning LTO off for the addon build sidesteps it;
+# these are appended after gyp's own flags, so -fno-lto wins.
+ENV CFLAGS=-fno-lto CXXFLAGS=-fno-lto LDFLAGS=-fno-lto
+
 RUN apk add --no-cache make gcc g++ python3 linux-headers npm jq && \
     npm install -g "$(jq -r '.packageManager' package.json)" && \
     pnpm config set store-dir /tmp/pnpm-store && \

@@ -17,7 +17,7 @@ This repo exists to run those branches until (or unless) they land upstream: it 
 definition, the image build, and the runbook for rebasing the forks onto each new Zigbee2MQTT
 release. If the PRs merge, all of this goes away in favour of the official add-on.
 
-Currently built from **Zigbee2MQTT 2.13.0** / **zigbee-herdsman v10.8.0**.
+Currently built from **Zigbee2MQTT 2.14.1** / **zigbee-herdsman v10.9.2**.
 
 ## Installing in Home Assistant
 
