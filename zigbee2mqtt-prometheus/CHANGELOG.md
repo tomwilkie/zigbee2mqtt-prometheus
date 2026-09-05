@@ -6,6 +6,29 @@ Versions follow the upstream Zigbee2MQTT release this build is based on, suffixe
 commit of [tomwilkie/zigbee2mqtt@prometheus-extension](https://github.com/tomwilkie/zigbee2mqtt/tree/prometheus-extension):
 `X.Y.Z-<sha>`, plus a `-N` add-on revision when the packaging changes without the fork moving.
 
+## 2.14.1-693372ec
+
+- Zigbee2MQTT 2.13.0 → 2.14.1, and zigbee-herdsman v10.8.0 → v10.9.2 — the version 2.14.1 pins,
+  not herdsman's latest release (v10.9.3). 2.14.1 is a hotfix over 2.14.0 correcting inverted
+  cover states; neither release adds a `breaking_versions` entry, so this is a normal update.
+- Rebasing the exporter needed two fixups, both upstream refactors rather than behaviour changes:
+  `Zigbee2MQTTSettings` became a `type` instead of an `interface`, and the `object-assign-deep`
+  dependency was dropped. The `prometheus_exporter` settings entry and the `prom-client`
+  dependency were re-applied onto those new shapes; the exporter's own code is unchanged and its
+  35 tests still pass.
+- The image build now compiles native addons with LTO off (`CFLAGS`/`CXXFLAGS`/`LDFLAGS=-fno-lto`
+  in `build/Dockerfile`). herdsman v10.9.x patches `@serialport/bindings-cpp` for Node v26.3+
+  ([#1856](https://github.com/Koenkk/zigbee-herdsman/pull/1856)), so pnpm stores it under a
+  directory named `...patch_hash=<sha>`; the base image's Node is built with `enable_lto`, and
+  GCC's lto-wrapper drives its link through a generated makefile that reads the `=` in that path
+  as a variable assignment and fails. Only the build changed — the binding still loads and
+  enumerates ports in the finished image.
+- Re-synced the serial-port discovery instructions in `DOCS.md` from the official add-on, which
+  had gone stale: they now point at **Settings → System → Hardware → ⋮ → System hardware**
+  ([hassio-zigbee2mqtt@da1992fd](https://github.com/zigbee2mqtt/hassio-zigbee2mqtt/commits/da1992fd25d7a2b12b186509f881f8ea8dc12ec9/zigbee2mqtt/DOCS.md)).
+  Upstream's `config.json` moved too, but only its own `version` field, so our copy needed no
+  change beyond the version bump.
+
 ## 2.13.0-1e1df702-2
 
 - The sidebar icon is now `mdi:zigbee` (was `mdi:chart-line`), matching the official add-on.
