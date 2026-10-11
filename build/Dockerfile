@@ -31,7 +31,9 @@ FROM ${ADDON_IMAGE} AS deps
 
 WORKDIR /build
 
-COPY package.json pnpm-lock.yaml ./
+# pnpm-workspace.yaml carries pnpm 11's `allowBuilds`, which must list our git-hosted
+# zigbee-herdsman for pnpm to run its prepare (build) step.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # The base image's Node is built with `enable_lto`, which node-gyp propagates into every native
 # addon build, so linking runs through GCC's lto-wrapper. That wrapper drives the parallel link

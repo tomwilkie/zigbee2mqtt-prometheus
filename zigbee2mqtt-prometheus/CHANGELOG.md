@@ -6,6 +6,23 @@ Versions follow the upstream Zigbee2MQTT release this build is based on, suffixe
 commit of [tomwilkie/zigbee2mqtt@prometheus-extension](https://github.com/tomwilkie/zigbee2mqtt/tree/prometheus-extension):
 `X.Y.Z-<sha>`, plus a `-N` add-on revision when the packaging changes without the fork moving.
 
+## 2.14.2-07ae9849
+
+- Zigbee2MQTT 2.14.1 → 2.14.2, and zigbee-herdsman v10.9.2 → v10.10.0 — the version 2.14.2 pins,
+  not herdsman's latest release (v11.0.3). No new `breaking_versions` entry, so this is a normal
+  update. The exporter rebased with only a `package.json` conflict (upstream bumped neighbouring
+  dependencies); its code is unchanged and its 35 tests pass, along with the rest of the z2m
+  suite (877).
+- Zigbee2MQTT moved from pnpm 10 to 11, which refuses to run a git-hosted dependency's build
+  script unless it is listed in `allowBuilds`. The fork's `pnpm-workspace.yaml` now allow-lists
+  the pinned zigbee-herdsman commit, and `build/Dockerfile` copies that file into the deps stage.
+- Re-synced the add-on definition from the official add-on: `/ssl` is now mounted read-only, so
+  certificates kept there can be used for MQTT and the frontend, and the add-on-config map type
+  is renamed `addon_config` → `app_config` with the same `/addon_config` path
+  ([hassio-zigbee2mqtt@4af4f380](https://github.com/zigbee2mqtt/hassio-zigbee2mqtt/commits/4af4f3808466a2d0aa1aaf4f82975d3afe404290/zigbee2mqtt/config.json)).
+  `DOCS.md` gains the matching note
+  ([hassio-zigbee2mqtt@deced454](https://github.com/zigbee2mqtt/hassio-zigbee2mqtt/commits/deced45412c47b54703799023d2d1ecd7ac681f8/zigbee2mqtt/DOCS.md)).
+
 ## 2.14.1-693372ec
 
 - Zigbee2MQTT 2.13.0 → 2.14.1, and zigbee-herdsman v10.8.0 → v10.9.2 — the version 2.14.1 pins,
