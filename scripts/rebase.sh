@@ -9,8 +9,9 @@
 # conflicts, leaving the checkout mid-rebase for you to resolve by hand (then re-run this script,
 # or continue manually and run the push/verify steps yourself).
 #
-# On success both branches are force-pushed, and zigbee2mqtt's package.json/lockfile are updated
-# to pin the freshly rebased zigbee-herdsman commit.
+# On success both branches are force-pushed, and zigbee2mqtt's package.json/lockfile (and the
+# allowBuilds entry in pnpm-workspace.yaml) are updated to pin the freshly rebased
+# zigbee-herdsman commit.
 
 set -euo pipefail
 
@@ -83,8 +84,24 @@ log "zigbee2mqtt: pinning zigbee-herdsman to $ZH_SHA"
         p.dependencies["zigbee-herdsman"] = "github:tomwilkie/zigbee-herdsman#" + process.argv[1];
         fs.writeFileSync("package.json", JSON.stringify(p, null, 4) + "\n");
     ' "$ZH_SHA"
-    pnpm install
-    if ! git diff --quiet -- package.json pnpm-lock.yaml; then
+    # pnpm 11+ won't run a git-hosted dependency's build script unless allowBuilds lists it, keyed
+    # by the exact tarball URL (the bare package name doesn't match), so swap in the new commit.
+    # Skipped if pnpm-workspace.yaml has no allowBuilds section (pnpm 10 and earlier).
+    # shellcheck disable=SC2016 # ${...} is a JS template literal, not shell
+    node -e '
+        const fs = require("fs");
+        const file = "pnpm-workspace.yaml";
+        const prefix = "zigbee-herdsman@https://codeload.github.com/tomwilkie/zigbee-herdsman/tar.gz/";
+        const lines = fs.readFileSync(file, "utf8").split("\n")
+            .filter((l) => !l.trimStart().replace(/^"/, "").startsWith(prefix));
+        let i = lines.indexOf("allowBuilds:");
+        if (i === -1) process.exit(0);
+        while (lines[i + 1]?.startsWith("  ")) i++;
+        lines.splice(i + 1, 0, `  "${prefix}${process.argv[1]}": true`);
+        fs.writeFileSync(file, lines.join("\n"));
+    ' "$ZH_SHA"
+    pnpm install --config.confirmModulesPurge=false
+    if ! git diff --quiet -- package.json pnpm-lock.yaml pnpm-workspace.yaml; then
         git commit --quiet -am "DO NOT COMMIT: point zigbee-herdsman at metrics-instrumentation fork" --amend --no-edit
     fi
 )
