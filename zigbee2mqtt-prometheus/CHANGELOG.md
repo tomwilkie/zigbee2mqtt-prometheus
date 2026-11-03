@@ -6,6 +6,18 @@ Versions follow the upstream Zigbee2MQTT release this build is based on, suffixe
 commit of [tomwilkie/zigbee2mqtt@prometheus-extension](https://github.com/tomwilkie/zigbee2mqtt/tree/prometheus-extension):
 `X.Y.Z-<sha>`, plus a `-N` add-on revision when the packaging changes without the fork moving.
 
+## 2.14.3-1e533e0a
+
+- Zigbee2MQTT 2.14.2 → 2.14.3, and zigbee-herdsman v10.10.0 → v11.2.0, the version 2.14.3 pins.
+  No new `breaking_versions` entry, so this is a normal update. The herdsman commit rebased
+  cleanly. The exporter commit only conflicted in `package.json`, where upstream bumped
+  neighbouring dependencies; its code is unchanged and its 35 tests pass, along with the rest of
+  the z2m suite (894).
+- The official add-on's 2.14.3-1 image requires a patched Node.js (CVE-2026-111497); this build
+  inherits it from that base image. The add-on definition's only other upstream change is its
+  version
+  ([hassio-zigbee2mqtt@92c4f1bc](https://github.com/zigbee2mqtt/hassio-zigbee2mqtt/commits/92c4f1bc2f156fcfe7ae24b648fc942104ce287b/zigbee2mqtt/config.json)).
+
 ## 2.14.2-07ae9849
 
 - Zigbee2MQTT 2.14.1 → 2.14.2, and zigbee-herdsman v10.9.2 → v10.10.0 — the version 2.14.2 pins,
